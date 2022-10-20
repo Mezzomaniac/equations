@@ -40,14 +40,16 @@ def parentheses_combos(last: int, first: int=0) -> set:
     return combos
 
 
-def equations(numbers, operations='+-*/', unary=None, *, fixed_order: bool=False, singles: bool=False, max_consecutive_powers: int=1, max_factorials: int=1) -> list:
-    '''For given iterables of /numbers/ and /operations/ return a list of all possible ways they can be arranged in a mathematical equation, taking into account all possible arrangements of parentheses.
+def equations(numbers, operations='+-*/', unary=None, *, insert_paras: bool=True, fixed_order: bool=False, singles: bool=False, max_consecutive_powers: int=1, max_factorials: int=1) -> list:
+    '''For given iterables of /numbers/ and /operations/ return a list of all possible ways they can be arranged in a mathematical equation, optionally taking into account all possible arrangements of parentheses.
     
     /numbers/ must be an iterable of numbers, which will be converted to str
     
     /operations/ must be an iterable of mathemathical symbols. It defaults to "+-*/". The full range of tested operations is ['+', '-', '*', '/', '', '.', '**', '%', '//']. The empty string joins numbers together.
     
     /unary/ is an optional unary function eg abs, operator.neg, math.floor, math.ceil, math.sqrt, math.factorial. It defaults to None. All permutations of applying it over two or more consecutive operands will be generated. The program can currently only accept one unary function at a time.
+    
+    The /insert_paras/ bool determines whether to generate versions of the equations with all possible arrangements of parentheses.
     
     If /fixed_order/ is True, the numbers will not be rearranged.
     
@@ -58,7 +60,7 @@ def equations(numbers, operations='+-*/', unary=None, *, fixed_order: bool=False
     length = len(numbers)
     number_combos = more_itertools.distinct_permutations(str(number) for number in numbers) if not fixed_order else [[str(number) for number in numbers]]
     operations_combos = list(itertools.product(operations, repeat=length-1))
-    para_combos = parentheses_combos(length)
+    para_combos = parentheses_combos(length) if insert_paras else {frozenset()}
     
     whole = {(0, length)}  # Used if unary
     single_positions = frozenset((i, i + 1) for i in range(length))  # Used if unary and singles
@@ -120,7 +122,7 @@ def parentheses_with_unary(para_combo, para_combo2, unary, length, single_positi
     return list(reversed(sorted(paras.items())))
 
 
-def solve(goals, numbers, operations='+-*/', unary=None, *, fixed_order: bool=False, singles: bool=False, max_consecutive_powers: int=1, max_factorials: int=1) -> dict:
+def solve(goals, numbers, operations='+-*/', unary=None, *, insert_paras: bool=True, fixed_order: bool=False, singles: bool=False, max_consecutive_powers: int=1, max_factorials: int=1) -> dict:
     '''For one or more given numeric goals, numbers and operations, return a number: list dictionary of all possible equations that can be made from the numbers and operations to make each goal.
     
     See equations() for how all parameters other than /goals/ work.'''
@@ -131,7 +133,7 @@ def solve(goals, numbers, operations='+-*/', unary=None, *, fixed_order: bool=Fa
         goals = [goals]
     
     hits = {goal: [] for goal in goals}
-    for equation in equations(numbers, operations, unary, fixed_order=fixed_order, singles=singles, max_consecutive_powers=max_consecutive_powers, max_factorials=max_factorials):
+    for equation in equations(numbers, operations, unary, insert_paras=insert_paras, fixed_order=fixed_order, singles=singles, max_consecutive_powers=max_consecutive_powers, max_factorials=max_factorials):
         eq = ''.join(equation)
         try:
             result = eval(eq)
