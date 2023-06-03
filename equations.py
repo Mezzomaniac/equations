@@ -6,6 +6,7 @@ from functools import lru_cache
 import itertools
 from math import ceil, factorial, floor, sqrt
 from operator import neg
+import warnings
 import more_itertools
 
 @lru_cache(maxsize=None)
@@ -154,8 +155,9 @@ def solve(goals: int | Iterable[int], numbers: Collection[int], operations: Iter
     hits = {goal: [] for goal in goals}
     for equation in equations(numbers, operations, unary, insert_paras=insert_paras, fixed_order=fixed_order, singles=singles, max_consecutive_powers=max_consecutive_powers, max_factorials=max_factorials):
         try:
-            result = eval(equation)
-            # TODO: disable SyntaxWarning
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", SyntaxWarning)
+                result = eval(equation)
         except (ZeroDivisionError, SyntaxError, TypeError, ValueError, OverflowError, AttributeError):
             continue
         if result in goals:
